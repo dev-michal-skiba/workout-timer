@@ -7,11 +7,14 @@ use crossterm::event::{self, Event, KeyCode};
 use ratatui::{
     prelude::{Backend, Constraint, Direction, Layout},
     style::{Color, Modifier, Style},
-    widgets::{Block, Borders, Gauge},
+    text::Text,
+    widgets::{Block, Borders, Gauge, Paragraph},
     Frame, Terminal,
 };
 
 const TICK_RATE: Duration = Duration::from_secs(1);
+const COMMON_HEADER: &str = "Workout Timer developed by dev-michal-skiba\n\n";
+const TIMER_HEADER: &str = "Type q to exit\n\n";
 
 #[derive(PartialEq, Eq, Hash)]
 enum TimerState {
@@ -341,11 +344,18 @@ fn tui<B: Backend>(frame: &mut Frame<B>, timer: &mut Timer) {
                 Constraint::Max(4),
                 Constraint::Max(4),
                 Constraint::Max(4),
+                Constraint::Max(4),
             ]
             .as_ref(),
         )
         .split(frame.size());
-
+    // Header info
+    let mut text = Text::styled(
+        COMMON_HEADER,
+        Style::default().add_modifier(Modifier::ITALIC),
+    );
+    text.extend(Text::raw(TIMER_HEADER));
+    frame.render_widget(Paragraph::new(text).block(Block::new()), chunks[0]);
     // Full Workout Timer
     let gauge = Gauge::default()
         .block(
@@ -360,7 +370,7 @@ fn tui<B: Backend>(frame: &mut Frame<B>, timer: &mut Timer) {
         )
         .percent(timer.workout.progress)
         .label(timer.workout.get_label());
-    frame.render_widget(gauge, chunks[0]);
+    frame.render_widget(gauge, chunks[1]);
 
     if timer.state == TimerState::Set || timer.state == TimerState::ExcerciseRest {
         // Set Timer
@@ -377,7 +387,7 @@ fn tui<B: Backend>(frame: &mut Frame<B>, timer: &mut Timer) {
             )
             .percent(timer.set.progress)
             .label(timer.set.get_label());
-        frame.render_widget(gauge, chunks[1]);
+        frame.render_widget(gauge, chunks[2]);
     } else if timer.state == TimerState::SetRest {
         // Set Rest Timer
         let gauge = Gauge::default()
@@ -393,7 +403,7 @@ fn tui<B: Backend>(frame: &mut Frame<B>, timer: &mut Timer) {
             )
             .percent(timer.set_rest.progress)
             .label(timer.set_rest.get_label());
-        frame.render_widget(gauge, chunks[1]);
+        frame.render_widget(gauge, chunks[2]);
     }
 
     if timer.state == TimerState::SetRest {
@@ -408,7 +418,7 @@ fn tui<B: Backend>(frame: &mut Frame<B>, timer: &mut Timer) {
             .gauge_style(Style::default().fg(Color::Red).add_modifier(Modifier::BOLD))
             .percent(timer.excercise.progress)
             .label(timer.excercise.get_label());
-        frame.render_widget(gauge, chunks[2]);
+        frame.render_widget(gauge, chunks[3]);
     } else if timer.state == TimerState::ExcerciseRest {
         // Excercise Rest Timer
         let gauge = Gauge::default()
@@ -424,6 +434,6 @@ fn tui<B: Backend>(frame: &mut Frame<B>, timer: &mut Timer) {
             )
             .percent(timer.excercise_rest.progress)
             .label(timer.excercise_rest.get_label());
-        frame.render_widget(gauge, chunks[2]);
+        frame.render_widget(gauge, chunks[3]);
     }
 }
